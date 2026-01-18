@@ -1,4 +1,10 @@
 import { TextField } from "./TextField.js";
+import { STRINGS } from "./strings.js";
+
+/**
+ * Used chatgpt to help fix some logic behind updating the localstorage every 2 seconds or if another page made a change.
+ * Also used chatgpt to help make each data entry have a unique id while still being update accordingly
+ */
 
 class WriterSystem {
     container;
@@ -7,10 +13,10 @@ class WriterSystem {
 
     constructor()
     {
-        this.time = document.getElementById("time");
-        this.container = document.getElementById("data");
+        this.time = document.getElementById(STRINGS.TIME_ID);
+        this.container = document.getElementById(STRINGS.CONTAINER_ID);
         this.textField = new TextField();
-        this.count = parseInt(localStorage.getItem("textFieldCounter")) || 0;
+        this.count = parseInt(localStorage.getItem(STRINGS.LOCALSTORAGE_COUNTER_ID)) || 0;
     }
 
     initialize()
@@ -22,7 +28,7 @@ class WriterSystem {
             this.loadTextFields();
         })
 
-        document.getElementById("add").addEventListener("click", () => {
+        document.getElementById(STRINGS.ADD_ID).addEventListener("click", () => {
             this.addNewTextField(this.count, "");
         })
     }
@@ -30,16 +36,17 @@ class WriterSystem {
     loadTextFields()
     {
         this.time.innerHTML = new Date();
-        this.container.innerHTML = '';
+        this.container.innerHTML = "";
 
         for(let i = 0; i < localStorage.length; i++)
         {
             const key = localStorage.key(i);
                 
-            if(key != "textFieldCounter")
+            if(key != STRINGS.LOCALSTORAGE_COUNTER_ID)
             {
                     const data = localStorage.getItem(key);
-                    this.addNewTextField(key, data);
+                    const parsedData = JSON.parse(data)
+                    this.addNewTextField(key, parsedData.text);
             }
         }
     }
@@ -49,21 +56,23 @@ class WriterSystem {
         this.time.innerHTML = new Date();
         this.textField.createTextField(id, data);
         this.count++;
-        localStorage.setItem("textFieldCounter", this.count);
+        localStorage.setItem(STRINGS.LOCALSTORAGE_COUNTER_ID, this.count);
     }
 
     dataCheck()
     {
-        const textFields = document.querySelectorAll("[id^='textData'");
+        const textFields = document.querySelectorAll(STRINGS.TEXTFIELD_ID_QUERY);
 
         textFields.forEach(field => {
-            const id = field.id.replace("textData", "");
+            const id = field.id.replace(STRINGS.TEXTFIELD_ID, "");
             const value = field.value;
 
-            if(value !== "" && value !== localStorage.getItem(id))
+            if(value !== "" && 
+                value !== localStorage.getItem(id))
             {
                 this.time.innerHTML = new Date();
-                localStorage.setItem(id, value);
+                const noteObject = { text: value }
+                localStorage.setItem(id, JSON.stringify(noteObject));
             }
             else if(value === "")
             {
